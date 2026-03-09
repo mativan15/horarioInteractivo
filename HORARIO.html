@@ -266,25 +266,24 @@
   });
 
   /* ── Live "now" indicator ── */
-  let nowLineTime = null;
-  const nowLines = [];
+  let nowTimeLine = null;
+  let nowDayLine = null;
+  let nowDayLineDow = null;
 
-  function ensureNowLines() {
-    if (nowLines.length) return;
-    const line0 = document.createElement('div');
-    line0.className = 'now-line';
-    timeBody.appendChild(line0);
-    nowLines.push(line0);
-    dayCols.forEach(col => {
-      const line = document.createElement('div');
-      line.className = 'now-line';
-      col.querySelector('.col-body').appendChild(line);
-      nowLines.push(line);
-    });
+  function showNowLines(dow, px) {
+    const todayCol = document.querySelector(`.day-col[data-day="${dow}"]`);
+    if (nowDayLineDow !== dow) {
+      if (nowDayLine) nowDayLine.remove();
+      nowDayLine = document.createElement('div');
+      nowDayLine.className = 'now-line';
+      if (todayCol) todayCol.querySelector('.col-body').appendChild(nowDayLine);
+      nowDayLineDow = dow;
+    }
+    if (nowDayLine) { nowDayLine.style.display = ''; nowDayLine.style.top = px + 'px'; }
   }
 
   function hideNowLines() {
-    nowLines.forEach(l => l.style.display = 'none');
+    if (nowDayLine) nowDayLine.style.display = 'none';
   }
 
   function updateNow() {
@@ -305,9 +304,8 @@
       return;
     }
 
-    ensureNowLines();
     const px = (mins - startMin);        // 1 min = 1 px (60 px/h)
-    nowLines.forEach(l => { l.style.display = ''; l.style.top = px + 'px'; });
+    showNowLines(dow, px);
 
     const todayCol = document.querySelector(`.day-col[data-day="${dow}"]`);
     if (todayCol) todayCol.querySelector('.col-header').classList.add('today');
