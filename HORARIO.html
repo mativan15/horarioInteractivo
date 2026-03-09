@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horario académico</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; padding: 1rem; background: #f8fafc; }
+    h1 { font-size: 1.3rem; margin-bottom: 0.75rem; color: #1e293b; }
+    .top-bar { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.75rem; }
+    .top-bar h1 { margin-bottom: 0; }
+
+    .scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid #94a3b8;
+      border-radius: 6px;
+    }
+
+    /* ── Grid layout ── */
+    .schedule {
+      display: flex;
+      min-width: 860px;
+    }
+
+    /* ── Column shared ── */
+    .col { display: flex; flex-direction: column; }
+    .col-header {
+      height: 2.5rem; display: flex; align-items: center; justify-content: center;
+      background: #1e293b; color: #fff; font-weight: 600; font-size: 0.85rem;
+      border-bottom: 1px solid #94a3b8; flex-shrink: 0;
+    }
+    .col-body {
+      position: relative;
+      height: 840px;                                   /* 14 h × 60 px */
+      background-size: 100% 60px;
+      background-image: linear-gradient(
+        to bottom, transparent calc(100% - 1px), #cbd5e1 calc(100% - 1px)
+      );
+    }
+
+    /* ── Time column ── */
+    .time-col {
+      width: 5.5rem; flex-shrink: 0; border-right: 1px solid #94a3b8;
+      position: sticky; left: 0; z-index: 5;
+    }
+    .time-col .col-header { background: #1e293b; }
+    .time-col .col-body { background-color: #f1f5f9; }
+    .time-label {
+      position: absolute; right: 0.5rem; left: 0.5rem;
+      font-size: 0.75rem; font-weight: 500; color: #475569;
+      text-align: right; line-height: 1;
+      transform: translateY(-50%);
+    }
+
+    /* ── Day columns ── */
+    .day-col { flex: 1; min-width: 140px; border-right: 1px solid #cbd5e1; }
+    .day-col:last-child { border-right: none; }
+    .day-col .col-body { background-color: #fff; }
+
+    /* ── Course blocks ── */
+    .c {
+      position: absolute; left: 3px; right: 3px;
+      border-radius: 4px; padding: 4px 6px;
+      font-size: 0.72rem; font-weight: 600; line-height: 1.25;
+      overflow: hidden; z-index: 1;
+    }
+    .c small { display: block; font-weight: 400; opacity: 0.85; font-size: 0.65rem; margin-top: 2px; }
+    .c { cursor: pointer; transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s; }
+    .c.dimmed { opacity: 0.25; filter: grayscale(60%); }
+    .c.highlighted { transform: scale(1.03); box-shadow: 0 2px 8px rgba(0,0,0,0.25); z-index: 2; }
+    .c.now-active { animation: pulse 2s ease-in-out infinite; z-index: 3; }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+      50%      { box-shadow: 0 0 0 5px rgba(239,68,68,0); }
+    }
+
+    /* ── "Now" line ── */
+    .now-line {
+      position: absolute; left: 0; right: 0; height: 2px;
+      background: #ef4444; z-index: 4; pointer-events: none;
+    }
+    .now-line::before {
+      content: ''; position: absolute; left: -4px; top: -3px;
+      width: 8px; height: 8px; border-radius: 50%; background: #ef4444;
+    }
+
+    /* ── Today column highlight ── */
+    .col-header.today { background: #334155; outline: 2px solid #ef4444; outline-offset: -2px; }
+
+    /* ── Status badge ── */
+    .status {
+      font-size: 0.82rem; color: #9333ea; text-align: right;
+      background: linear-gradient(135deg, #fdf2f8, #f5f3ff);
+      padding: 0.4rem 0.9rem; border-radius: 20px;
+      white-space: nowrap; font-weight: 500;
+      border: 1.5px solid #e9d5ff;
+      box-shadow: 0 1px 4px rgba(168,85,247,0.15);
+    }
+    .status.active {
+      background: linear-gradient(135deg, #fce7f3, #ede9fe);
+      color: #be185d; font-weight: 600;
+      border-color: #f9a8d4;
+      box-shadow: 0 2px 10px rgba(236,72,153,0.25);
+      animation: badge-glow 2s ease-in-out infinite;
+    }
+    @keyframes badge-glow {
+      0%, 100% { box-shadow: 0 2px 10px rgba(236,72,153,0.25); }
+      50%      { box-shadow: 0 2px 16px rgba(236,72,153,0.45); }
+    }
+
+    /* ── Colors ── */
+    .analitica { background: #bfdbfe; color: #1e3a8a; border-left: 3px solid #2563eb; }
+    .organica  { background: #bbf7d0; color: #14532d; border-left: 3px solid #16a34a; }
+    .fisico    { background: #fef08a; color: #713f12; border-left: 3px solid #ca8a04; }
+    .fisio     { background: #e9d5ff; color: #4c1d95; border-left: 3px solid #7c3aed; }
+    .resp      { background: #fed7aa; color: #9a3412; border-left: 3px solid #ea580c; }
+    .tutoria   { background: #e5e7eb; color: #374151; border-left: 3px solid #6b7280; }
+
+    /* ── Legend ── */
+    .legend { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; font-size: 0.75rem; }
+    .legend-item { display: flex; align-items: center; gap: 0.35rem; }
+    .legend-swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+
+    /* ── Mobile (iPhone ≤ 430px) ── */
+    @media (max-width: 480px) {
+      body { padding: 0.6rem; }
+      .top-bar { flex-direction: column; gap: 0.5rem; align-items: stretch; }
+      .top-bar h1 { font-size: 1.1rem; }
+      .status { text-align: center; font-size: 0.78rem; white-space: normal; }
+      .time-col { width: 3.2rem; }
+      .time-label { font-size: 0.6rem; right: 0.25rem; left: 0.25rem; }
+      .col-header { font-size: 0.7rem; height: 2rem; }
+      .day-col { min-width: 120px; }
+      .c { font-size: 0.62rem; padding: 3px 4px; }
+      .c small { font-size: 0.55rem; }
+      .legend { gap: 0.5rem; font-size: 0.65rem; }
+      .legend-swatch { width: 11px; height: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>Horario académico</h1>
+  <div class="status" id="status"></div>
+</div>
+
+<div class="scroll">
+<div class="schedule">
+
+  <!-- ════ HORA ════ -->
+  <div class="col time-col">
+    <div class="col-header">HORA</div>
+    <div class="col-body">
+      <span class="time-label" style="top:30px">7:00 AM</span>
+      <span class="time-label" style="top:90px">8:00 AM</span>
+      <span class="time-label" style="top:150px">9:00 AM</span>
+      <span class="time-label" style="top:210px">10:00 AM</span>
+      <span class="time-label" style="top:270px">11:00 AM</span>
+      <span class="time-label" style="top:330px">12:00 PM</span>
+      <span class="time-label" style="top:390px">1:00 PM</span>
+      <span class="time-label" style="top:450px">2:00 PM</span>
+      <span class="time-label" style="top:510px">3:00 PM</span>
+      <span class="time-label" style="top:570px">4:00 PM</span>
+      <span class="time-label" style="top:630px">5:00 PM</span>
+      <span class="time-label" style="top:690px">6:00 PM</span>
+      <span class="time-label" style="top:750px">7:00 PM</span>
+      <span class="time-label" style="top:810px">8:00 PM</span>
+    </div>
+  </div>
+
+  <!-- ════ LUNES ════ -->
+  <div class="col day-col" data-day="1">
+    <div class="col-header">LUNES</div>
+    <div class="col-body">
+      <div class="c fisico"    data-course="fisico"    data-day="1" data-start="420" data-end="465" style="top:0px;   height:45px">FISICOQUÍMICA<small>TSM‑302 · 07:00‑07:45</small></div>
+      <div class="c analitica" data-course="analitica" data-day="1" data-start="465" data-end="555" style="top:45px;  height:90px">QUÍMICA ANALÍTICA I<small>TSM‑302 · 07:45‑09:15</small></div>
+      <div class="c tutoria"   data-course="tutoria"   data-day="1" data-start="555" data-end="600" style="top:135px; height:45px">TUTORÍA SEM.3<small>TSM‑302 · 09:15‑10:00</small></div>
+      <div class="c fisio"     data-course="fisio"     data-day="1" data-start="600" data-end="660" style="top:180px; height:60px">FISIOLOGÍA Y FISIOPATOLOGÍA<small>TSM‑302 · 10:00‑11:00</small></div>
+      <div class="c resp"      data-course="resp"      data-day="1" data-start="1080" data-end="1170" style="top:660px; height:90px">RESP. CIUDADANA Y ECOLOGÍA<small>AV‑1 · 18:00‑19:30</small></div>
+    </div>
+  </div>
+
+  <!-- ════ MARTES ════ -->
+  <div class="col day-col" data-day="2">
+    <div class="col-header">MARTES</div>
+    <div class="col-body">
+      <div class="c fisico"    data-course="fisico"    data-day="2" data-start="420" data-end="510" style="top:0px;   height:90px">FISICOQUÍMICA<small>TSM‑302 · 07:00‑08:30</small></div>
+      <div class="c organica"  data-course="organica"  data-day="2" data-start="510" data-end="555" style="top:90px;  height:45px">QUÍMICA ORGÁNICA I<small>TSM‑302 · 08:30‑09:15</small></div>
+      <div class="c analitica" data-course="analitica" data-day="2" data-start="555" data-end="600" style="top:135px; height:45px">QUÍMICA ANALÍTICA I<small>TSM‑302 · 09:15‑10:00</small></div>
+      <div class="c fisio"     data-course="fisio"     data-day="2" data-start="600" data-end="660" style="top:180px; height:60px">FISIOLOGÍA Y FISIOPATOLOGÍA<small>TSM‑302 · 10:00‑11:00</small></div>
+    </div>
+  </div>
+
+  <!-- ════ MIÉRCOLES ════ -->
+  <div class="col day-col" data-day="3">
+    <div class="col-header">MIERCOLES</div>
+    <div class="col-body">
+      <div class="c fisio"     data-course="fisio"     data-day="3" data-start="420" data-end="510" style="top:0px;   height:90px">FISIOLOGÍA Y FISIOPATOLOGÍA<small>TSM‑302 · 07:00‑08:30</small></div>
+      <div class="c organica"  data-course="organica"  data-day="3" data-start="555" data-end="645" style="top:135px; height:90px">QUÍMICA ORGÁNICA I<small>TSM‑302 · 09:15‑10:45</small></div>
+      <div class="c organica"  data-course="organica"  data-day="3" data-start="840" data-end="1020" style="top:420px; height:180px">QUÍMICA ORGÁNICA I<small>F‑303 · 14:00‑17:00</small></div>
+      <div class="c fisio"     data-course="fisio"     data-day="3" data-start="1020" data-end="1140" style="top:600px; height:120px">FISIOLOGÍA Y FISIOPATOLOGÍA<small>H‑201 · 17:00‑19:00</small></div>
+      <div class="c fisico"    data-course="fisico"    data-day="3" data-start="1140" data-end="1260" style="top:720px; height:120px">FISICOQUÍMICA<small>H‑104 · 19:00‑21:00</small></div>
+    </div>
+  </div>
+
+  <!-- ════ JUEVES ════ -->
+  <div class="col day-col" data-day="4">
+    <div class="col-header">JUEVES</div>
+    <div class="col-body">
+      <div class="c analitica" data-course="analitica" data-day="4" data-start="420" data-end="600" style="top:0px;   height:180px">QUÍMICA ANALÍTICA I<small>H‑104 · 07:00‑10:00</small></div>
+      <div class="c resp"      data-course="resp"      data-day="4" data-start="1080" data-end="1125" style="top:660px; height:45px">RESP. CIUDADANA Y ECOLOGÍA<small>AV‑1 · 18:00‑18:45</small></div>
+    </div>
+  </div>
+
+  <!-- ════ VIERNES ════ -->
+  <div class="col day-col" data-day="5">
+    <div class="col-header">VIERNES</div>
+    <div class="col-body"></div>
+  </div>
+
+</div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-swatch" style="background:#bfdbfe;border:1px solid #2563eb"></span> Química Analítica I</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:#bbf7d0;border:1px solid #16a34a"></span> Química Orgánica I</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:#fef08a;border:1px solid #ca8a04"></span> Fisicoquímica</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:#e9d5ff;border:1px solid #7c3aed"></span> Fisiología y Fisiopatología</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:#fed7aa;border:1px solid #ea580c"></span> Resp. Ciudadana y Ecología</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:#e5e7eb;border:1px solid #6b7280"></span> Tutoría</div>
+</div>
+
+<script>
+  const allCourses = document.querySelectorAll('.c');
+  const dayCols = document.querySelectorAll('.day-col');
+  const timeBody = document.querySelector('.time-col .col-body');
+  const statusEl = document.getElementById('status');
+
+  /* ── Click highlight (existing) ── */
+  function clearHighlight() {
+    allCourses.forEach(el => el.classList.remove('dimmed', 'highlighted'));
+  }
+
+  allCourses.forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const course = el.dataset.course;
+      allCourses.forEach(c => {
+        c.classList.toggle('highlighted', c.dataset.course === course);
+        c.classList.toggle('dimmed', c.dataset.course !== course);
+      });
+    });
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.c')) clearHighlight();
+  });
+
+  /* ── Live "now" indicator ── */
+  let nowLineTime = null;
+  const nowLines = [];
+
+  function ensureNowLines() {
+    if (nowLines.length) return;
+    const line0 = document.createElement('div');
+    line0.className = 'now-line';
+    timeBody.appendChild(line0);
+    nowLines.push(line0);
+    dayCols.forEach(col => {
+      const line = document.createElement('div');
+      line.className = 'now-line';
+      col.querySelector('.col-body').appendChild(line);
+      nowLines.push(line);
+    });
+  }
+
+  function hideNowLines() {
+    nowLines.forEach(l => l.style.display = 'none');
+  }
+
+  function updateNow() {
+    const now = new Date();
+    const dow = now.getDay();            // 0=Sun … 6=Sat
+    const mins = now.getHours() * 60 + now.getMinutes();
+    const startMin = 420;                // 7:00 AM
+    const endMin = 1260;                 // 9:00 PM
+    const inRange = dow >= 1 && dow <= 5 && mins >= startMin && mins <= endMin;
+
+    allCourses.forEach(el => el.classList.remove('now-active'));
+    document.querySelectorAll('.col-header.today').forEach(h => h.classList.remove('today'));
+
+    if (!inRange) {
+      hideNowLines();
+      statusEl.textContent = 'Fuera de horario académico';
+      statusEl.classList.remove('active');
+      return;
+    }
+
+    ensureNowLines();
+    const px = (mins - startMin);        // 1 min = 1 px (60 px/h)
+    nowLines.forEach(l => { l.style.display = ''; l.style.top = px + 'px'; });
+
+    const todayCol = document.querySelector(`.day-col[data-day="${dow}"]`);
+    if (todayCol) todayCol.querySelector('.col-header').classList.add('today');
+
+    let activeName = null;
+    let remaining = 0;
+    allCourses.forEach(el => {
+      if (+el.dataset.day === dow && mins >= +el.dataset.start && mins < +el.dataset.end) {
+        el.classList.add('now-active');
+        activeName = el.childNodes[0].textContent;
+        remaining = +el.dataset.end - mins;
+      }
+    });
+
+    if (activeName) {
+      const rh = Math.floor(remaining / 60);
+      const rm = remaining % 60;
+      const timeLeft = rh > 0 ? `${rh}h ${rm}min` : `${rm} min`;
+      statusEl.textContent = `${activeName} — faltan ${timeLeft}`;
+      statusEl.classList.add('active');
+    } else {
+      let nextName = null;
+      let untilNext = Infinity;
+      allCourses.forEach(el => {
+        if (+el.dataset.day === dow && +el.dataset.start > mins) {
+          const gap = +el.dataset.start - mins;
+          if (gap < untilNext) {
+            untilNext = gap;
+            nextName = el.childNodes[0].textContent;
+          }
+        }
+      });
+      if (nextName) {
+        const nh = Math.floor(untilNext / 60);
+        const nm = untilNext % 60;
+        const eta = nh > 0 ? `${nh}h ${nm}min` : `${nm} min`;
+        statusEl.textContent = `Siguiente: ${nextName} en ${eta}`;
+      } else {
+        statusEl.textContent = 'Sin más clases hoy';
+      }
+      statusEl.classList.remove('active');
+    }
+  }
+
+  updateNow();
+  setInterval(updateNow, 30000);
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+
+  /* ── Auto-scroll to current time ── */
+  (function scrollToNow() {
+    const now = new Date();
+    const dow = now.getDay();
+    const mins = now.getHours() * 60 + now.getMinutes();
+    if (dow >= 1 && dow <= 5 && mins >= 420 && mins <= 1260) {
+      const scrollEl = document.querySelector('.scroll');
+      const px = mins - 420;
+      const offset = Math.max(0, px - scrollEl.clientHeight / 3);
+      scrollEl.scrollTop = offset;
+    }
+  })();
+</script>
+</body>
+</html>
