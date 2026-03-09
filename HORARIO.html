@@ -16,10 +16,11 @@
     .top-bar h1 { margin-bottom: 0; }
 
     .scroll {
-      overflow-x: auto;
+      overflow: auto;
       -webkit-overflow-scrolling: touch;
       border: 1px solid #94a3b8;
       border-radius: 6px;
+      max-height: calc(100dvh - 5rem);
     }
 
     /* ── Grid layout ── */
@@ -34,6 +35,7 @@
       height: 2.5rem; display: flex; align-items: center; justify-content: center;
       background: #1e293b; color: #fff; font-weight: 600; font-size: 0.85rem;
       border-bottom: 1px solid #94a3b8; flex-shrink: 0;
+      position: sticky; top: 0; z-index: 6;
     }
     .col-body {
       position: relative;
@@ -47,14 +49,14 @@
     /* ── Time column ── */
     .time-col {
       width: 5.5rem; flex-shrink: 0; border-right: 1px solid #94a3b8;
-      position: sticky; left: 0; z-index: 5;
+      position: sticky; left: 0; z-index: 7;
     }
-    .time-col .col-header { background: #1e293b; }
+    .time-col .col-header { background: #1e293b; z-index: 8; }
     .time-col .col-body { background-color: #f1f5f9; }
     .time-label {
       position: absolute; right: 0.5rem; left: 0.5rem;
       font-size: 0.75rem; font-weight: 500; color: #475569;
-      text-align: right; line-height: 1;
+      text-align: right; line-height: 1; white-space: nowrap;
       transform: translateY(-50%);
     }
 
@@ -133,8 +135,8 @@
       .top-bar { flex-direction: column; gap: 0.5rem; align-items: stretch; }
       .top-bar h1 { font-size: 1.1rem; }
       .status { text-align: center; font-size: 0.78rem; white-space: normal; }
-      .time-col { width: 3.2rem; }
-      .time-label { font-size: 0.6rem; right: 0.25rem; left: 0.25rem; }
+      .time-col { width: 3.8rem; }
+      .time-label { font-size: 0.6rem; right: 0.2rem; left: 0; }
       .col-header { font-size: 0.7rem; height: 2rem; }
       .day-col { min-width: 120px; }
       .c { font-size: 0.62rem; padding: 3px 4px; }
