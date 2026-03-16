@@ -204,6 +204,15 @@
     }
     .notes-panel-footer button:hover { background: #334155; }
 
+    /* ── Fixed days row (mobile only, like Pendientes) ── */
+    .schedule-header-fixed {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 10; overflow-x: auto; overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      background: #1e293b; border-bottom: 1px solid #94a3b8;
+    }
+
     /* ── Pending tasks button ── */
     .pending-tasks {
       position: fixed; bottom: 0; left: 0; right: 0;
@@ -249,6 +258,9 @@
       .time-col { width: 3.8rem; }
       .time-label { font-size: 0.72rem; right: 0.2rem; left: 0; }
       .col-header { font-size: 0.78rem; height: 2rem; }
+      .schedule-header { visibility: hidden; }
+      .schedule-header-fixed { display: flex; min-width: 860px; flex-shrink: 0; padding-top: env(safe-area-inset-top); }
+      .schedule-header-fixed .schedule-header-cell { font-size: 0.78rem; height: 2rem; }
       .schedule-header-cell { font-size: 0.78rem; height: 2rem; }
       .schedule-header-cell.hora { width: 3.8rem; }
       .day-col { min-width: 120px; }
@@ -267,6 +279,15 @@
 <div class="top-bar">
   <h1>Horario académico</h1>
   <div class="status" id="status"></div>
+</div>
+
+<div class="schedule-header-fixed" id="schedule-header-fixed">
+  <div class="schedule-header-cell hora">HORA</div>
+  <div class="schedule-header-cell day" data-day="1">LUNES</div>
+  <div class="schedule-header-cell day" data-day="2">MARTES</div>
+  <div class="schedule-header-cell day" data-day="3">MIERCOLES</div>
+  <div class="schedule-header-cell day" data-day="4">JUEVES</div>
+  <div class="schedule-header-cell day" data-day="5">VIERNES</div>
 </div>
 
 <div class="scroll">
@@ -592,6 +613,33 @@
     if (w && !w.contains(e.target)) document.getElementById('pending-tasks-dropdown').hidden = true;
   });
 
+  (function initFixedDaysHeader() {
+    const scrollEl = document.querySelector('.scroll');
+    const scheduleHeader = document.querySelector('.schedule-header');
+    const fixedHeader = document.getElementById('schedule-header-fixed');
+    if (!scrollEl || !scheduleHeader || !fixedHeader) return;
+
+    function updateFixedHeader() {
+      if (!window.matchMedia('(max-width: 480px)').matches) {
+        fixedHeader.style.display = '';
+        return;
+      }
+      const top = scheduleHeader.getBoundingClientRect().top;
+      if (top <= 0) {
+        fixedHeader.style.display = 'flex';
+        fixedHeader.scrollLeft = scrollEl.scrollLeft;
+      } else {
+        fixedHeader.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('scroll', updateFixedHeader, { passive: true });
+    scrollEl.addEventListener('scroll', function syncFixedHeaderScroll() {
+      if (fixedHeader.style.display === 'flex') fixedHeader.scrollLeft = scrollEl.scrollLeft;
+    }, { passive: true });
+    updateFixedHeader();
+  })();
+
   (function initNotesSync() {
     if (typeof firebase === 'undefined') {
       notesDocRef = null;
@@ -707,8 +755,7 @@
     const px = (mins - startMin);        // 1 min = 1 px (60 px/h)
     showNowLines(dow, px);
 
-    const todayHeaderCell = document.querySelector(`.schedule-header-cell.day[data-day="${dow}"]`);
-    if (todayHeaderCell) todayHeaderCell.classList.add('today');
+    document.querySelectorAll(`.schedule-header-cell.day[data-day="${dow}"]`).forEach(el => el.classList.add('today'));
 
     let activeName = null;
     let remaining = 0;
