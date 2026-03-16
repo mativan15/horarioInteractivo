@@ -16,11 +16,11 @@
     .top-bar h1 { margin-bottom: 0; }
 
     .scroll {
-      overflow: auto;
+      overflow-x: auto;
+      overflow-y: visible;
       -webkit-overflow-scrolling: touch;
       border: 1px solid #94a3b8;
       border-radius: 6px;
-      max-height: calc(100dvh - 5rem);
     }
 
     /* ── Grid layout ── */
@@ -360,6 +360,8 @@
   <div class="pending-tasks-dropdown" id="pending-tasks-dropdown" hidden></div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script>
   const allCourses = document.querySelectorAll('.c');
   const dayCols = document.querySelectorAll('.day-col');
@@ -368,6 +370,19 @@
 
   /* ── Course notes (key, storage, peek, panel, pending) ── */
   const NOTES_STORAGE_KEY = 'horario_notes';
+  const NOTES_DOC_ID = 'fce8a70d-ca23-48b6-a649-891c23231f42';
+  let notesCache = {};
+  let notesDirty = false;
+  let notesDocRef = null;
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDl4VjSta6ZacSL7k1GEujB-2A14cD15uE",
+    authDomain: "horariomaria.firebaseapp.com",
+    projectId: "horariomaria",
+    storageBucket: "horariomaria.firebasestorage.app",
+    messagingSenderId: "571836695766",
+    appId: "1:571836695766:web:fa5c3ad95692c5a485f577"
+  };
 
   function getCourseKey(el) {
     const name = (el.childNodes[0] && el.childNodes[0].textContent || '').trim();
@@ -384,10 +399,7 @@
   }
 
   function getNotesStore() {
-    try {
-      const raw = localStorage.getItem(NOTES_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (_) { return {}; }
+    return notesCache;
   }
 
   function getNotes(courseKey) {
@@ -397,13 +409,24 @@
   }
 
   function setNotes(courseKey, items) {
-    const store = getNotesStore();
-    store[courseKey] = { items };
-    try {
-      localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(store));
-    } catch (_) {}
+    notesCache[courseKey] = { items };
     refreshAllPeeks();
     updatePendingTasksButton();
+    if (navigator.onLine && notesDocRef) {
+      notesDocRef.set({ data: notesCache }, { merge: true }).catch(() => {
+        persistNotesToLocal();
+        notesDirty = true;
+      });
+    } else {
+      persistNotesToLocal();
+      notesDirty = true;
+    }
+  }
+
+  function persistNotesToLocal() {
+    try {
+      localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notesCache));
+    } catch (_) {}
   }
 
   function refreshAllPeeks() {
@@ -507,7 +530,8 @@
     const store = getNotesStore();
     const out = {};
     Object.keys(store).forEach(key => {
-      const items = (store[key].items || []).filter(i => !i.completed);
+      const data = store[key];
+      const items = (data && Array.isArray(data.items) ? data.items : []).filter(i => !i.completed);
       if (items.length === 0) return;
       const [name, room] = key.split('|');
       const label = room ? name + ' (' + room + ')' : name;
@@ -551,6 +575,52 @@
     const w = document.getElementById('pending-tasks');
     if (w && !w.contains(e.target)) document.getElementById('pending-tasks-dropdown').hidden = true;
   });
+
+  (function initNotesSync() {
+    if (typeof firebase === 'undefined') {
+      notesDocRef = null;
+      try {
+        const raw = localStorage.getItem(NOTES_STORAGE_KEY);
+        if (raw) notesCache = JSON.parse(raw);
+      } catch (_) {}
+      return;
+    }
+    try {
+      const app = firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore(app);
+      notesDocRef = db.collection('notes').doc(NOTES_DOC_ID);
+    } catch (e) {
+      notesDocRef = null;
+    }
+    if (!navigator.onLine) {
+      try {
+        const raw = localStorage.getItem(NOTES_STORAGE_KEY);
+        if (raw) notesCache = JSON.parse(raw);
+      } catch (_) {}
+    }
+    if (notesDocRef) {
+      notesDocRef.onSnapshot((snap) => {
+        if (notesDirty) return;
+        const d = snap.data();
+        notesCache = (d && d.data && typeof d.data === 'object') ? d.data : {};
+        persistNotesToLocal();
+        refreshAllPeeks();
+        updatePendingTasksButton();
+        if (notesPanelCourseKey) renderNotesPanelList();
+      });
+    } else {
+      try {
+        const raw = localStorage.getItem(NOTES_STORAGE_KEY);
+        if (raw) notesCache = JSON.parse(raw);
+      } catch (_) {}
+    }
+    window.addEventListener('online', () => {
+      if (!notesDirty || !notesDocRef) return;
+      notesDocRef.set({ data: notesCache }, { merge: true }).then(() => {
+        notesDirty = false;
+      }).catch(() => {});
+    });
+  })();
 
   refreshAllPeeks();
   updatePendingTasksButton();
@@ -679,8 +749,9 @@
     if (dow >= 1 && dow <= 5 && mins >= 420 && mins <= 1260) {
       const scrollEl = document.querySelector('.scroll');
       const px = mins - 420;
-      const offset = Math.max(0, px - scrollEl.clientHeight / 3);
-      scrollEl.scrollTop = offset;
+      const top = scrollEl.getBoundingClientRect().top + window.scrollY;
+      const targetY = top + px - window.innerHeight / 3;
+      window.scrollTo({ top: Math.max(0, targetY), behavior: 'instant' });
     }
   })();
 </script>
