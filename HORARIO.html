@@ -258,8 +258,8 @@
       .time-col { width: 3.8rem; }
       .time-label { font-size: 0.72rem; right: 0.2rem; left: 0; }
       .col-header { font-size: 0.78rem; height: 2rem; }
-      .schedule-header { visibility: hidden; }
       .schedule-header-fixed { display: flex; min-width: 860px; flex-shrink: 0; padding-top: env(safe-area-inset-top); }
+      body.fixed-days-visible .schedule-header { visibility: hidden; }
       .schedule-header-fixed .schedule-header-cell { font-size: 0.78rem; height: 2rem; }
       .schedule-header-cell { font-size: 0.78rem; height: 2rem; }
       .schedule-header-cell.hora { width: 3.8rem; }
@@ -628,8 +628,10 @@
       if (top <= 0) {
         fixedHeader.style.display = 'flex';
         fixedHeader.scrollLeft = scrollEl.scrollLeft;
+        document.body.classList.add('fixed-days-visible');
       } else {
         fixedHeader.style.display = 'none';
+        document.body.classList.remove('fixed-days-visible');
       }
     }
 
