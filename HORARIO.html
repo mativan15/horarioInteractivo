@@ -31,11 +31,22 @@
 
     /* ── Column shared ── */
     .col { display: flex; flex-direction: column; }
+    .schedule-header {
+      display: flex; min-width: 860px; flex-shrink: 0;
+      position: sticky; top: 0; z-index: 10; background: #1e293b;
+    }
+    .schedule-header-cell {
+      height: 2.5rem; display: flex; align-items: center; justify-content: center;
+      background: #1e293b; color: #fff; font-weight: 600; font-size: 0.85rem;
+      border-bottom: 1px solid #94a3b8; flex-shrink: 0;
+    }
+    .schedule-header-cell.hora { width: 5.5rem; border-right: 1px solid #94a3b8; }
+    .schedule-header-cell.day { flex: 1; min-width: 140px; border-right: 1px solid #cbd5e1; }
+    .schedule-header-cell.day:last-child { border-right: none; }
     .col-header {
       height: 2.5rem; display: flex; align-items: center; justify-content: center;
       background: #1e293b; color: #fff; font-weight: 600; font-size: 0.85rem;
       border-bottom: 1px solid #94a3b8; flex-shrink: 0;
-      position: sticky; top: 0; z-index: 6;
     }
     .col-body {
       position: relative;
@@ -94,6 +105,7 @@
 
     /* ── Today column highlight ── */
     .col-header.today { background: #334155; outline: 2px solid #ef4444; outline-offset: -2px; }
+    .schedule-header-cell.day.today { background: #334155; outline: 2px solid #ef4444; outline-offset: -2px; }
 
     /* ── Status badge ── */
     .status {
@@ -237,6 +249,8 @@
       .time-col { width: 3.8rem; }
       .time-label { font-size: 0.72rem; right: 0.2rem; left: 0; }
       .col-header { font-size: 0.78rem; height: 2rem; }
+      .schedule-header-cell { font-size: 0.78rem; height: 2rem; }
+      .schedule-header-cell.hora { width: 3.8rem; }
       .day-col { min-width: 120px; }
       .c { font-size: 0.72rem; padding: 3px 4px; }
       .c small { font-size: 0.62rem; }
@@ -256,11 +270,18 @@
 </div>
 
 <div class="scroll">
+<div class="schedule-header">
+  <div class="schedule-header-cell hora">HORA</div>
+  <div class="schedule-header-cell day" data-day="1">LUNES</div>
+  <div class="schedule-header-cell day" data-day="2">MARTES</div>
+  <div class="schedule-header-cell day" data-day="3">MIERCOLES</div>
+  <div class="schedule-header-cell day" data-day="4">JUEVES</div>
+  <div class="schedule-header-cell day" data-day="5">VIERNES</div>
+</div>
 <div class="schedule">
 
   <!-- ════ HORA ════ -->
   <div class="col time-col">
-    <div class="col-header">HORA</div>
     <div class="col-body">
       <span class="time-label" style="top:30px">7:00 AM</span>
       <span class="time-label" style="top:90px">8:00 AM</span>
@@ -281,7 +302,6 @@
 
   <!-- ════ LUNES ════ -->
   <div class="col day-col" data-day="1">
-    <div class="col-header">LUNES</div>
     <div class="col-body">
       <div class="c fisico"    data-course="fisico"    data-day="1" data-start="420" data-end="465" style="top:0px;   height:45px">FISICOQUÍMICA<small>TSM‑302 · 07:00‑07:45</small></div>
       <div class="c analitica" data-course="analitica" data-day="1" data-start="465" data-end="555" style="top:45px;  height:90px">QUÍMICA ANALÍTICA I<small>TSM‑302 · 07:45‑09:15</small></div>
@@ -293,7 +313,6 @@
 
   <!-- ════ MARTES ════ -->
   <div class="col day-col" data-day="2">
-    <div class="col-header">MARTES</div>
     <div class="col-body">
       <div class="c fisico"    data-course="fisico"    data-day="2" data-start="420" data-end="510" style="top:0px;   height:90px">FISICOQUÍMICA<small>TSM‑302 · 07:00‑08:30</small></div>
       <div class="c organica"  data-course="organica"  data-day="2" data-start="510" data-end="555" style="top:90px;  height:45px">QUÍMICA ORGÁNICA I<small>TSM‑302 · 08:30‑09:15</small></div>
@@ -304,7 +323,6 @@
 
   <!-- ════ MIÉRCOLES ════ -->
   <div class="col day-col" data-day="3">
-    <div class="col-header">MIERCOLES</div>
     <div class="col-body">
       <div class="c fisio"     data-course="fisio"     data-day="3" data-start="420" data-end="510" style="top:0px;   height:90px">FISIOLOGÍA Y FISIOPATOLOGÍA<small>TSM‑302 · 07:00‑08:30</small></div>
       <div class="c organica"  data-course="organica"  data-day="3" data-start="555" data-end="645" style="top:135px; height:90px">QUÍMICA ORGÁNICA I<small>TSM‑302 · 09:15‑10:45</small></div>
@@ -316,7 +334,6 @@
 
   <!-- ════ JUEVES ════ -->
   <div class="col day-col" data-day="4">
-    <div class="col-header">JUEVES</div>
     <div class="col-body">
       <div class="c analitica" data-course="analitica" data-day="4" data-start="420" data-end="600" style="top:0px;   height:180px">QUÍMICA ANALÍTICA I<small>H‑104 · 07:00‑10:00</small></div>
       <div class="c resp"      data-course="resp"      data-day="4" data-start="1080" data-end="1125" style="top:660px; height:45px">RESP. CIUDADANA Y ECOLOGÍA<small>AV‑1 · 18:00‑18:45</small></div>
@@ -325,7 +342,6 @@
 
   <!-- ════ VIERNES ════ -->
   <div class="col day-col" data-day="5">
-    <div class="col-header">VIERNES</div>
     <div class="col-body"></div>
   </div>
 
@@ -679,7 +695,7 @@
     const inRange = dow >= 1 && dow <= 5 && mins >= startMin && mins <= endMin;
 
     allCourses.forEach(el => el.classList.remove('now-active'));
-    document.querySelectorAll('.col-header.today').forEach(h => h.classList.remove('today'));
+    document.querySelectorAll('.schedule-header-cell.day.today').forEach(h => h.classList.remove('today'));
 
     if (!inRange) {
       hideNowLines();
@@ -691,8 +707,8 @@
     const px = (mins - startMin);        // 1 min = 1 px (60 px/h)
     showNowLines(dow, px);
 
-    const todayCol = document.querySelector(`.day-col[data-day="${dow}"]`);
-    if (todayCol) todayCol.querySelector('.col-header').classList.add('today');
+    const todayHeaderCell = document.querySelector(`.schedule-header-cell.day[data-day="${dow}"]`);
+    if (todayHeaderCell) todayHeaderCell.classList.add('today');
 
     let activeName = null;
     let remaining = 0;
