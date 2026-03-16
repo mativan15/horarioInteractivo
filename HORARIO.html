@@ -129,6 +129,105 @@
     .legend-item { display: flex; align-items: center; gap: 0.35rem; }
     .legend-swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
 
+    /* ── Notes peek (inside course box) ── */
+    .notes-peek {
+      font-size: 0.6rem; font-weight: 400; opacity: 0.9; margin-top: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .notes-peek:empty { display: none; }
+
+    /* ── Notes panel overlay ── */
+    .notes-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 20; padding: 1rem;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .notes-overlay[hidden] { display: none; }
+    .notes-panel {
+      background: #fff; border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      width: 100%; max-width: 420px; max-height: 85vh;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .notes-panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0;
+      font-weight: 600; font-size: 0.95rem; color: #1e293b; flex-shrink: 0;
+    }
+    .notes-panel-close {
+      background: none; border: none; cursor: pointer; padding: 0.35rem;
+      font-size: 1.25rem; line-height: 1; color: #64748b;
+      border-radius: 4px;
+    }
+    .notes-panel-close:hover { background: #f1f5f9; color: #1e293b; }
+    .notes-panel-list {
+      flex: 1; overflow: auto; padding: 0.5rem 1rem;
+      min-height: 120px;
+    }
+    .notes-panel-item {
+      display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .notes-panel-item:last-child { border-bottom: none; }
+    .notes-panel-item input[type="checkbox"] { flex-shrink: 0; cursor: pointer; }
+    .notes-panel-item label { flex: 1; cursor: pointer; font-weight: 400; font-size: 0.9rem; }
+    .notes-panel-item.completed label { text-decoration: line-through; color: #64748b; }
+    .notes-panel-item-delete {
+      background: none; border: none; cursor: pointer; padding: 0.2rem;
+      font-size: 1rem; line-height: 1; color: #94a3b8; border-radius: 4px;
+    }
+    .notes-panel-item-delete:hover { color: #ef4444; background: #fef2f2; }
+    .notes-panel-footer {
+      display: flex; gap: 0.5rem; padding: 0.75rem 1rem; border-top: 1px solid #e2e8f0;
+      flex-shrink: 0;
+    }
+    .notes-panel-footer input {
+      flex: 1; padding: 0.5rem 0.75rem; border: 1px solid #cbd5e1;
+      border-radius: 6px; font-size: 0.9rem;
+    }
+    .notes-panel-footer button {
+      padding: 0.5rem 1rem; background: #1e293b; color: #fff; border: none;
+      border-radius: 6px; font-weight: 500; cursor: pointer; font-size: 0.9rem;
+    }
+    .notes-panel-footer button:hover { background: #334155; }
+
+    /* ── Pending tasks button ── */
+    .pending-tasks {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      z-index: 10; padding: 0.5rem 1rem; padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+      display: flex; flex-direction: column; align-items: stretch;
+      pointer-events: none;
+    }
+    .pending-tasks > * { pointer-events: auto; }
+    .pending-tasks-btn {
+      align-self: flex-end;
+      padding: 0.5rem 0.9rem; background: #1e293b; color: #fff;
+      border-radius: 20px; border: none; font-weight: 500; font-size: 0.85rem;
+      cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .pending-tasks-btn:hover { background: #334155; }
+    .pending-tasks-btn .badge { margin-left: 0.35rem; opacity: 0.9; }
+    .pending-tasks-dropdown {
+      align-self: flex-end; margin-top: 0.35rem;
+      background: #fff; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      max-height: 60vh; overflow: auto; min-width: 260px; max-width: 360px;
+      padding: 0.5rem 0;
+    }
+    .pending-tasks-dropdown[hidden] { display: none; }
+    .pending-tasks-dropdown h4 {
+      font-size: 0.8rem; color: #64748b; padding: 0.35rem 1rem; margin: 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .pending-tasks-dropdown ul { list-style: none; padding: 0.25rem 0; margin: 0; }
+    .pending-tasks-dropdown li {
+      padding: 0.35rem 1rem; font-size: 0.85rem; color: #334155;
+      border-bottom: 1px solid #f8fafc;
+    }
+    .pending-tasks-dropdown li:last-child { border-bottom: none; }
+    .pending-tasks-dropdown .course-group { margin-bottom: 0.5rem; }
+    .pending-tasks-dropdown .course-group:last-child { margin-bottom: 0; }
+
     /* ── Mobile (iPhone ≤ 430px) ── */
     @media (max-width: 480px) {
       body { padding: 0.6rem; }
@@ -143,6 +242,9 @@
       .c small { font-size: 0.62rem; }
       .legend { gap: 0.5rem; font-size: 0.72rem; }
       .legend-swatch { width: 11px; height: 11px; }
+      .notes-panel { max-width: none; max-height: 90vh; border-radius: 12px 12px 0 0; margin-top: auto; }
+      .pending-tasks-btn { width: 100%; align-self: stretch; text-align: center; }
+      .pending-tasks-dropdown { max-width: none; min-width: 0; width: 100%; }
     }
   </style>
 </head>
@@ -239,11 +341,219 @@
   <div class="legend-item"><span class="legend-swatch" style="background:#e5e7eb;border:1px solid #6b7280"></span> Tutoría</div>
 </div>
 
+<div id="notes-overlay" class="notes-overlay" hidden>
+  <div class="notes-panel" id="notes-panel">
+    <div class="notes-panel-header">
+      <span id="notes-panel-title"></span>
+      <button type="button" class="notes-panel-close" id="notes-panel-close" aria-label="Cerrar">×</button>
+    </div>
+    <div class="notes-panel-list" id="notes-panel-list"></div>
+    <div class="notes-panel-footer">
+      <input type="text" id="notes-panel-input" placeholder="Nueva tarea..." aria-label="Nueva tarea" />
+      <button type="button" id="notes-panel-add">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<div class="pending-tasks" id="pending-tasks">
+  <button type="button" class="pending-tasks-btn" id="pending-tasks-btn">Pendientes (<span id="pending-count">0</span>)</button>
+  <div class="pending-tasks-dropdown" id="pending-tasks-dropdown" hidden></div>
+</div>
+
 <script>
   const allCourses = document.querySelectorAll('.c');
   const dayCols = document.querySelectorAll('.day-col');
   const timeBody = document.querySelector('.time-col .col-body');
   const statusEl = document.getElementById('status');
+
+  /* ── Course notes (key, storage, peek, panel, pending) ── */
+  const NOTES_STORAGE_KEY = 'horario_notes';
+
+  function getCourseKey(el) {
+    const name = (el.childNodes[0] && el.childNodes[0].textContent || '').trim();
+    const small = el.querySelector('small');
+    const room = (small && small.textContent ? small.textContent.split(' · ')[0] : '').trim();
+    return name + '|' + room;
+  }
+
+  function getCourseLabel(el) {
+    const name = (el.childNodes[0] && el.childNodes[0].textContent || '').trim();
+    const small = el.querySelector('small');
+    const room = (small && small.textContent ? small.textContent.split(' · ')[0] : '').trim();
+    return room ? name + ' — ' + room : name;
+  }
+
+  function getNotesStore() {
+    try {
+      const raw = localStorage.getItem(NOTES_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (_) { return {}; }
+  }
+
+  function getNotes(courseKey) {
+    const store = getNotesStore();
+    const data = store[courseKey];
+    return (data && Array.isArray(data.items)) ? data.items : [];
+  }
+
+  function setNotes(courseKey, items) {
+    const store = getNotesStore();
+    store[courseKey] = { items };
+    try {
+      localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(store));
+    } catch (_) {}
+    refreshAllPeeks();
+    updatePendingTasksButton();
+  }
+
+  function refreshAllPeeks() {
+    const store = getNotesStore();
+    allCourses.forEach(el => {
+      const key = getCourseKey(el);
+      let peek = el.querySelector('.notes-peek');
+      if (!peek) {
+        peek = document.createElement('div');
+        peek.className = 'notes-peek';
+        el.appendChild(peek);
+      }
+      const data = store[key];
+      const items = (data && Array.isArray(data.items)) ? data.items : [];
+      const pending = items.filter(i => !i.completed).length;
+      const total = items.length;
+      if (total === 0) {
+        peek.textContent = '';
+      } else {
+        peek.textContent = pending + ' pendiente' + (pending !== 1 ? 's' : '') + ' (' + (total - pending) + '/' + total + ')';
+      }
+    });
+  }
+
+  let notesPanelCourseKey = null;
+
+  function openNotesPanel(courseKey, courseLabel) {
+    notesPanelCourseKey = courseKey;
+    document.getElementById('notes-panel-title').textContent = courseLabel;
+    document.getElementById('notes-overlay').hidden = false;
+    document.getElementById('notes-panel-input').value = '';
+    renderNotesPanelList();
+    document.getElementById('notes-panel-input').focus();
+  }
+
+  function closeNotesPanel() {
+    document.getElementById('notes-overlay').hidden = true;
+    notesPanelCourseKey = null;
+  }
+
+  function renderNotesPanelList() {
+    const listEl = document.getElementById('notes-panel-list');
+    const items = notesPanelCourseKey ? getNotes(notesPanelCourseKey) : [];
+    listEl.innerHTML = '';
+    items.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'notes-panel-item' + (item.completed ? ' completed' : '');
+      const id = 'note-' + item.id;
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.id = id;
+      cb.checked = !!item.completed;
+      cb.addEventListener('change', () => {
+        item.completed = !item.completed;
+        const all = getNotes(notesPanelCourseKey);
+        const idx = all.findIndex(i => i.id === item.id);
+        if (idx !== -1) { all[idx] = item; setNotes(notesPanelCourseKey, all); }
+        renderNotesPanelList();
+      });
+      const label = document.createElement('label');
+      label.htmlFor = id;
+      label.textContent = item.text || '';
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'notes-panel-item-delete';
+      del.setAttribute('aria-label', 'Eliminar');
+      del.textContent = '×';
+      del.addEventListener('click', () => {
+        const all = getNotes(notesPanelCourseKey).filter(i => i.id !== item.id);
+        setNotes(notesPanelCourseKey, all);
+        renderNotesPanelList();
+      });
+      div.appendChild(cb);
+      div.appendChild(label);
+      div.appendChild(del);
+      listEl.appendChild(div);
+    });
+  }
+
+  document.getElementById('notes-panel-close').addEventListener('click', closeNotesPanel);
+  document.getElementById('notes-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('notes-overlay')) closeNotesPanel();
+  });
+  document.getElementById('notes-panel').addEventListener('click', e => e.stopPropagation());
+  document.getElementById('notes-panel-add').addEventListener('click', () => {
+    const input = document.getElementById('notes-panel-input');
+    const text = (input.value || '').trim();
+    if (!text || !notesPanelCourseKey) return;
+    const items = getNotes(notesPanelCourseKey);
+    const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random();
+    items.push({ id, text, completed: false });
+    setNotes(notesPanelCourseKey, items);
+    input.value = '';
+    renderNotesPanelList();
+  });
+  document.getElementById('notes-panel-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('notes-panel-add').click();
+  });
+
+  function getPendingByCourse() {
+    const store = getNotesStore();
+    const out = {};
+    Object.keys(store).forEach(key => {
+      const items = (store[key].items || []).filter(i => !i.completed);
+      if (items.length === 0) return;
+      const [name, room] = key.split('|');
+      const label = room ? name + ' (' + room + ')' : name;
+      out[key] = { label, items };
+    });
+    return out;
+  }
+
+  function updatePendingTasksButton() {
+    const byCourse = getPendingByCourse();
+    const total = Object.values(byCourse).reduce((s, g) => s + g.items.length, 0);
+    document.getElementById('pending-count').textContent = total;
+    const dropdown = document.getElementById('pending-tasks-dropdown');
+    dropdown.innerHTML = '';
+    if (total === 0) {
+      dropdown.hidden = true;
+      return;
+    }
+    Object.entries(byCourse).forEach(([key, { label, items }]) => {
+      const group = document.createElement('div');
+      group.className = 'course-group';
+      const h4 = document.createElement('h4');
+      h4.textContent = label;
+      group.appendChild(h4);
+      const ul = document.createElement('ul');
+      items.forEach(i => {
+        const li = document.createElement('li');
+        li.textContent = i.text || '';
+        ul.appendChild(li);
+      });
+      group.appendChild(ul);
+      dropdown.appendChild(group);
+    });
+  }
+
+  document.getElementById('pending-tasks-btn').addEventListener('click', () => {
+    const dd = document.getElementById('pending-tasks-dropdown');
+    dd.hidden = !dd.hidden;
+  });
+  document.addEventListener('click', e => {
+    const w = document.getElementById('pending-tasks');
+    if (w && !w.contains(e.target)) document.getElementById('pending-tasks-dropdown').hidden = true;
+  });
+
+  refreshAllPeeks();
+  updatePendingTasksButton();
 
   /* ── Click highlight (existing) ── */
   function clearHighlight() {
@@ -253,6 +563,10 @@
   allCourses.forEach(el => {
     el.addEventListener('click', e => {
       e.stopPropagation();
+      if (el.classList.contains('highlighted')) {
+        openNotesPanel(getCourseKey(el), getCourseLabel(el));
+        return;
+      }
       const course = el.dataset.course;
       allCourses.forEach(c => {
         c.classList.toggle('highlighted', c.dataset.course === course);
