@@ -263,6 +263,7 @@
       .schedule-header-fixed .schedule-header-cell { font-size: 0.78rem; height: 2rem; }
       .schedule-header-cell { font-size: 0.78rem; height: 2rem; }
       .schedule-header-cell.hora { width: 3.8rem; }
+      .schedule-header-cell.day { min-width: 120px; }
       .day-col { min-width: 120px; }
       .c { font-size: 0.72rem; padding: 3px 4px; }
       .c small { font-size: 0.62rem; }
@@ -622,13 +623,16 @@
     function updateFixedHeader() {
       if (!window.matchMedia('(max-width: 480px)').matches) {
         fixedHeader.style.display = '';
+        document.body.classList.remove('fixed-days-visible');
         return;
       }
       const top = scheduleHeader.getBoundingClientRect().top;
       if (top <= 0) {
         fixedHeader.style.display = 'flex';
-        fixedHeader.scrollLeft = scrollEl.scrollLeft;
         document.body.classList.add('fixed-days-visible');
+        requestAnimationFrame(function syncScroll() {
+          fixedHeader.scrollLeft = scrollEl.scrollLeft;
+        });
       } else {
         fixedHeader.style.display = 'none';
         document.body.classList.remove('fixed-days-visible');
@@ -637,7 +641,9 @@
 
     window.addEventListener('scroll', updateFixedHeader, { passive: true });
     scrollEl.addEventListener('scroll', function syncFixedHeaderScroll() {
-      if (fixedHeader.style.display === 'flex') fixedHeader.scrollLeft = scrollEl.scrollLeft;
+      if (fixedHeader.style.display === 'flex') {
+        fixedHeader.scrollLeft = scrollEl.scrollLeft;
+      }
     }, { passive: true });
     updateFixedHeader();
   })();
